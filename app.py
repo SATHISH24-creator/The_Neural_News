@@ -2,7 +2,7 @@ import time
 import streamlit as st
 from io import BytesIO
 from docx import Document
-from config.rss_sources import rss_sources
+from config import rss_sources
 from utils.rss_fetcher import fetch_rss_entries
 from utils.analyzer import analyze_news_content
 from utils.gsheet_utils import (
@@ -150,7 +150,7 @@ if st.session_state.all_entries:
         cols = st.columns([0.05, 0.95])  # checkbox narrow, content wide
         with cols[0]:
             checked = actual_idx in st.session_state.selected_indices
-            checkbox = st.checkbox("", value=checked, key=f"select_{actual_idx}")
+            checkbox = st.checkbox("Select entry", value=checked, key=f"select_{actual_idx}", label_visibility="hidden")
             if checkbox:
                 st.session_state.selected_indices.add(actual_idx)
             else:
@@ -198,8 +198,9 @@ if selected_for_analysis:
         analyzed = []
         with st.spinner("Analyzing selected entries with AI..."):
             for entry in selected_for_analysis:
-                analysis_data = analyze_news_content(entry["link"], entry["published_date"])
-                if analysis_data:
+                analysis_result = analyze_news_content(entry["link"], entry["published_date"])
+                if analysis_result:
+                    analysis_data = analysis_result.model_dump()
                     entry["analyzed"] = True
                     entry["analysis_data"] = analysis_data
                     analyzed.append(entry)
