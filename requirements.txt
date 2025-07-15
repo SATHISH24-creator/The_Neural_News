@@ -1,0 +1,13 @@
+streamlit
+gspread
+oauth2client
+feedparser
+python-dateutil
+requests
+time
+Document
+re
+BeautifulSoup
+datetime
+ServiceAccountCredentials
+BytesIO
