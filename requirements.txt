@@ -1,7 +1,6 @@
 # Streamlit and related packages
-streamlit>=1.17.0  
+streamlit>=1.17.0
 
-docx
 # Google Sheets integration
 gspread>=5.4.0
 oauth2client>=4.1.3
@@ -13,15 +12,7 @@ google-auth-httplib2>=0.1.0
 feedparser>=6.0.8
 python-dateutil>=2.8.2
 requests>=2.28.1
-beautifulsoup4>=4.11.1  # Updated to the correct BeautifulSoup version
-# pyyaml>=6.0  # Often needed for Streamlit deployments
+beautifulsoup4>=4.11.1
 
-# Time and date utilities
-time  # This is a standard Python module, no need to include it here
-
-# Document and Data handling
-re  
-datetime 
-oauth2client>=4.1.3 
-
-io  
+# Optional libraries
+python-docx
