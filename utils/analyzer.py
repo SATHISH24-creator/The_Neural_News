@@ -6,7 +6,7 @@ import json
 import os
 
 # OpenRouter API configuration
-CRED_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cred.json")
+CRED_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "credentials.json")
 # Load credentials
 with open(CRED_PATH, "r") as f:
     creds = json.load(f)
