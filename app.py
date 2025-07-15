@@ -2,7 +2,7 @@ import time
 import streamlit as st
 from io import BytesIO
 from docx import Document
-from config.rss_sources import rss_sources
+from config import rss_sources
 from utils.rss_fetcher import fetch_rss_entries
 from utils.analyzer import analyze_news_content
 from utils.gsheet_utils import (
@@ -198,7 +198,7 @@ if selected_for_analysis:
         analyzed = []
         with st.spinner("Analyzing selected entries with AI..."):
             for entry in selected_for_analysis:
-                analysis_data = analyze_news_content(entry["link"], entry["published_date"])
+                analysis_data = analyze_news_content(entry["link"], entry["published_date"]).model_dump_json()
                 if analysis_data:
                     entry["analyzed"] = True
                     entry["analysis_data"] = analysis_data

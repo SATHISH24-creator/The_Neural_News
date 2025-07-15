@@ -1,31 +1,52 @@
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 import streamlit as st
 from datetime import datetime
+from oauth2client.service_account import ServiceAccountCredentials
 
-# Set your Google Sheets API credentials json path
-CREDENTIALS_FILE = r"C:\Users\sathi\Desktop\ai-rss-feed-analyzer\credentials.json"
+from config import Config
+
+CREDENTIALS_JSON = {
+    "type": "service_account",
+    "client_email": Config.Credentials.CLIENT_EMAIL,
+    "private_key": Config.Credentials.PRIVATE_KEY,
+    "private_key_id": Config.Credentials.PRIVATE_KEY_ID,
+    "token_uri": Config.Credentials.TOKEN_URI,
+}
+
 
 def connect_gspread_client():
-    scope = ['https://spreadsheets.google.com/feeds',
-             'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, scope)
+    scope = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive",
+    ]
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(CREDENTIALS_JSON, scope)
     client = gspread.authorize(creds)
     return client
 
+
 def list_spreadsheets(client):
     sheets = client.list_spreadsheet_files()
-    return [sheet['name'] for sheet in sheets]
+    return [sheet["name"] for sheet in sheets]
+
 
 def list_worksheets(sheet):
     return [ws.title for ws in sheet.worksheets()]
+
 
 def save_analyzed_entries_to_sheets(worksheet, entries):
     """Save analyzed entries to Google Sheets with enhanced data"""
     try:
         headers = [
-            "Original Title", "Enhanced Title", "Link", "Original Published Date",
-            "Description", "Core Message", "Key Tags", "Sector", "Source", "Extracted Date"
+            "Original Title",
+            "Enhanced Title",
+            "Link",
+            "Original Published Date",
+            "Description",
+            "Core Message",
+            "Key Tags",
+            "Sector",
+            "Source",
+            "Extracted Date",
         ]
 
         existing = worksheet.get_all_values()
@@ -41,7 +62,6 @@ def save_analyzed_entries_to_sheets(worksheet, entries):
         for entry in entries:
             if entry["link"] not in existing_links and entry.get("analyzed", False):
                 analysis = entry.get("analysis_data", {})
-
                 new_row = [
                     entry["title"],
                     analysis.get("feed_title", ""),
@@ -52,7 +72,7 @@ def save_analyzed_entries_to_sheets(worksheet, entries):
                     analysis.get("key_tags", ""),
                     analysis.get("sector", ""),
                     entry["source"],
-                    current_date
+                    current_date,
                 ]
 
                 new_rows.append(new_row)
