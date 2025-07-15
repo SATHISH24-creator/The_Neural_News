@@ -1,5 +1,5 @@
 # Streamlit and related packages
-streamlit==1.19.0  # Ensure this version is what you're using or adjust accordingly
+streamlit==1.17.0  # Ensure this version is what you're using or adjust accordingly
 
 # Google Sheets integration
 gspread==5.4.0
