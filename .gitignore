@@ -1,2 +1,8 @@
 /env/lib/*
 credentials.json
+.venv
+.streamlit
+.devcontainer
+**/__pycache__
+*.pyc
+*.pyo
