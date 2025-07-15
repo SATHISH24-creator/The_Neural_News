@@ -45,10 +45,9 @@ def analyze_news_content(link, published_date):
             model=PERPLEXITY_MODEL,
             messages=[
                 { "role": "system","content": "You are a professional AI assistant for structured technology news analysis." },
-                {"role": "user", "content": prompt.strip()},
+                {"role": "user", "content": prompt},
             ],
-            max_tokens=1000,
-            temperature=0.3,
+            temperature=0.4,
             response_format={
                 "type": "json_schema",
                 "json_schema": {
@@ -71,7 +70,21 @@ def analyze_news_content(link, published_date):
             }
         )
 
-        response = json.loads(raw_response.choices[0].message.content)
+        content = raw_response.choices[0].message.content
+        if not content:
+            print(raw_response)
+            st.error("❌ No content received from the analysis model.")
+            return None
+
+        print(f"Raw API response content: {content}")
+        
+        try:
+            response = json.loads(content)
+        except json.JSONDecodeError as json_error:
+            st.error(f"❌ Failed to parse JSON response: {json_error}")
+            st.error(f"Raw content: {content}")
+            return None
+            
         return TechnologyNewsAnalysis(**response)
 
     except Exception as e:

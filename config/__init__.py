@@ -1,7 +1,6 @@
 import streamlit as st
 
-from rss_sources import rss_sources
-
+from config.rss_sources import rss_sources
 
 class Config:
     TYPE = "service_account"
@@ -20,8 +19,8 @@ class Config:
 
     class LLM:
         OPENROUTER_API_KEY = st.secrets["openrouter_api_key"]
-        OPENROUTER_API_URL = "https://openrouter.ai/api/v1"
-        OPENROUTER_MODEL = "perplexity/sonar-pro"
+        OPENROUTER_API_URL = "https://generativelanguage.googleapis.com/v1beta/"
+        OPENROUTER_MODEL = "gemini-2.5-flash"
 
 
 __all__ = ["Config", "rss_sources"]

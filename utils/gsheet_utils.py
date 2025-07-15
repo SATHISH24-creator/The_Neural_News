@@ -7,6 +7,7 @@ from config import Config
 
 CREDENTIALS_JSON = {
     "type": "service_account",
+    "client_id": Config.Credentials.CLIENT_ID,
     "client_email": Config.Credentials.CLIENT_EMAIL,
     "private_key": Config.Credentials.PRIVATE_KEY,
     "private_key_id": Config.Credentials.PRIVATE_KEY_ID,
