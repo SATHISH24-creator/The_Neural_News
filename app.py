@@ -213,9 +213,13 @@ if st.session_state.analyzed_entries:
     
     # Initialize Google Sheets client once
     client = connect_gspread_client()
+    if client:
+        sheet_names = list_spreadsheets(client)
+        default_sheet_name = sheet_names[0] if sheet_names else None
+    else:
+        sheet_names = []
+        default_sheet_name = None
     print("===================",client)
-    sheet_names = list_spreadsheets(client)
-    default_sheet_name = sheet_names[0] if sheet_names else None
     
     for idx, entry in enumerate(st.session_state.analyzed_entries):
         with st.expander(entry["analysis_data"].get("feed_title", entry["title"])):
