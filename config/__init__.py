@@ -19,8 +19,8 @@ class Config:
 
     class LLM:
         OPENROUTER_API_KEY = st.secrets["openrouter_api_key"]
-        OPENROUTER_API_URL = "https://openrouter.ai/api/v1"
-        OPENROUTER_MODEL = "perplexity/sonar"
+        OPENROUTER_API_URL = "https://generativelanguage.googleapis.com/v1beta/" #https://openrouter.ai/api/v1"
+        OPENROUTER_MODEL = "gemini-2.5-flash" #"perplexity/sonar"
 
 
 __all__ = ["Config", "rss_sources"]
