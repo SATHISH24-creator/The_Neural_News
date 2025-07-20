@@ -12,6 +12,7 @@ CREDENTIALS_JSON = {
     "private_key": Config.Credentials.PRIVATE_KEY,
     "private_key_id": Config.Credentials.PRIVATE_KEY_ID,
     "token_uri": Config.Credentials.TOKEN_URI,
+    "project_id": Config.PROJECT_ID,
 }
 
 
