@@ -2,7 +2,7 @@ import gspread
 import streamlit as st
 from datetime import datetime
 from oauth2client.service_account import ServiceAccountCredentials
-
+from google.oauth2.service_account import Credentials
 from config import Config
 
 CREDENTIALS_JSON = {
