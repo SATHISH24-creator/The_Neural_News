@@ -1,16 +1,11 @@
 import time
 import streamlit as st
+import pandas as pd
 from io import BytesIO
 from docx import Document
 from config import rss_sources
 from utils.rss_fetcher import fetch_rss_entries
 from utils.analyzer import analyze_news_content
-from utils.gsheet_utils import (
-    connect_gspread_client,
-    list_spreadsheets,
-    list_worksheets,
-    save_analyzed_entries_to_sheets,
-)
 from utils.parser import clean_html_tags
 from content_gen import get_content_generator  
 
@@ -41,6 +36,10 @@ if "expanded_entry" not in st.session_state:
 if "generated_content" not in st.session_state:
     st.session_state.generated_content = {}
 
+# Initialize session state for cart
+if "cart_entries" not in st.session_state:
+    st.session_state.cart_entries = []
+
 # Add function to create docx file
 def create_docx_file(content, title, platform):
     """Create a docx file from content"""
@@ -57,6 +56,30 @@ def create_docx_file(content, title, platform):
     doc.save(buffer)
     buffer.seek(0)
     
+    return buffer
+
+# Add function to create Excel file from cart
+def create_excel_file(cart_entries):
+    """Create an Excel file from cart entries"""
+    data = []
+    for entry in cart_entries:
+        row = {
+            'Title': entry.get('title', ''),
+            'Original Link': entry.get('link', ''),
+            'Published Date': entry.get('published_date', ''),
+            'Source': entry.get('source', ''),
+            'Description': entry['analysis_data'].get('description', ''),
+            'Core Message': entry['analysis_data'].get('core_message', ''),
+            'Key Tags': entry['analysis_data'].get('key_tags', ''),
+            'Sector': entry['analysis_data'].get('sector', ''),
+        }
+        data.append(row)
+    
+    df = pd.DataFrame(data)
+    buffer = BytesIO()
+    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+        df.to_excel(writer, sheet_name='News Analysis', index=False)
+    buffer.seek(0)
     return buffer
 
 # --- Feed Source Selection and Keyword Filter (Side by Side) ---
@@ -207,15 +230,37 @@ if selected_for_analysis:
         st.session_state.analyzed_entries = analyzed
         st.success(f"Analyzed {len(analyzed)} entries.")
 
+# --- Cart Display ---
+if st.session_state.cart_entries:
+    st.sidebar.header(f"🛒 Cart ({len(st.session_state.cart_entries)} items)")
+    
+    # Download button in sidebar
+    if st.sidebar.button("📥 Download Cart as Excel", key="download_cart"):
+        excel_buffer = create_excel_file(st.session_state.cart_entries)
+        st.sidebar.download_button(
+            label="📥 Click to Download Excel File",
+            data=excel_buffer.getvalue(),
+            file_name=f"news_analysis_{len(st.session_state.cart_entries)}_entries.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    
+    # Clear cart button
+    if st.sidebar.button("🗑️ Clear Cart"):
+        st.session_state.cart_entries = []
+        st.rerun()
+    
+    # Show cart items in sidebar
+    for i, cart_item in enumerate(st.session_state.cart_entries):
+        with st.sidebar.expander(f"{i+1}. {cart_item['title'][:50]}..."):
+            st.write(f"**Source:** {cart_item.get('source', 'N/A')}")
+            st.write(f"**Date:** {cart_item.get('published_date', 'N/A')}")
+            if st.button(f"Remove", key=f"remove_cart_{i}"):
+                st.session_state.cart_entries.pop(i)
+                st.rerun()
+
 # --- Show Analyzed Results ---
 if st.session_state.analyzed_entries:
     st.header("🔍 News Preview")
-    
-    # Initialize Google Sheets client once
-    client = connect_gspread_client()
-    print("===================",client)
-    sheet_names = list_spreadsheets(client)
-    default_sheet_name = sheet_names[0] if sheet_names else None
     
     for idx, entry in enumerate(st.session_state.analyzed_entries):
         with st.expander(entry["analysis_data"].get("feed_title", entry["title"])):
@@ -345,19 +390,30 @@ if st.session_state.analyzed_entries:
                                         st.session_state[f"show_preview_{idx}"] = False
                                         st.rerun()
 
-            # --- Google Sheets Section ---
+            # --- Cart Section (replaces Google Sheets) ---
             with main_col2:
-                st.markdown("📊 **Save to Google Sheets**")
-                if default_sheet_name:
-                    sheet = client.open(default_sheet_name)
-                    worksheet_titles = list_worksheets(sheet)
-                    selected_worksheet_title = st.selectbox("Select Worksheet", worksheet_titles, key=f"worksheet_{idx}")
-                    worksheet = sheet.worksheet(selected_worksheet_title)
-                    if st.button(f"💾 Save This Entry", key=f"save_{idx}"):
-                        saved_count = save_analyzed_entries_to_sheets(worksheet, [entry])
-                        if saved_count > 0:
-                            st.success(f"✅ Entry saved successfully to '{selected_worksheet_title}'!")
-                        else:
-                            st.warning("⚠️ Entry was not saved (may already exist).")
+                st.markdown("🛒 **Add to Cart**")
+                
+                # Check if entry is already in cart
+                entry_id = entry.get('link', f"entry_{idx}")
+                is_in_cart = any(cart_entry.get('link') == entry_id for cart_entry in st.session_state.cart_entries)
+                
+                if is_in_cart:
+                    st.success("✅ Already in cart!")
+                    if st.button(f"🗑️ Remove from Cart", key=f"remove_from_cart_{idx}"):
+                        st.session_state.cart_entries = [
+                            cart_entry for cart_entry in st.session_state.cart_entries 
+                            if cart_entry.get('link') != entry_id
+                        ]
+                        st.rerun()
                 else:
-                    st.error("No spreadsheets found in your Google account.")
+                    if st.button(f"🛒 Add to Cart", key=f"add_to_cart_{idx}"):
+                        st.session_state.cart_entries.append(entry)
+                        st.success(f"✅ Added to cart!")
+                        st.rerun()
+                
+                st.markdown("---")
+                st.markdown(f"**Cart Status:** {len(st.session_state.cart_entries)} items")
+                
+                if st.session_state.cart_entries:
+                    st.info("💡 Use sidebar to manage cart and download as Excel")
