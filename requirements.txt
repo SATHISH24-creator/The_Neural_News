@@ -1,0 +1,8 @@
+streamlit
+python-docx
+gspread
+oauth2client
+feedparser
+requests
+beautifulsoup4
+openai

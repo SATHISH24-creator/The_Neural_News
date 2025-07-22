@@ -7,7 +7,7 @@ from datetime import datetime
 class ContentGenerator:
     def __init__(self):
         # OpenRouter API configuration
-        self.api_key = "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"
+        self.api_key = st.secrets["OPENROUTER_API_KEY"]
         self.api_url = "https://openrouter.ai/api/v1/chat/completions"
         self.model = "perplexity/sonar-pro"
         

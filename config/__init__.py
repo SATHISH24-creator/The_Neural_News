@@ -18,7 +18,7 @@ class Config:
         UNIVERSE_DOMAIN = "googleapis.com"
 
     class LLM:
-        OPENROUTER_API_KEY = st.secrets["openrouter_api_key"]
+        OPENROUTER_API_KEY = st.secrets["OPENROUTER_API_KEY"]
         OPENROUTER_API_URL = "https://openrouter.ai/api/v1"
         OPENROUTER_MODEL = "perplexity/sonar"
 
