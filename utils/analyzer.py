@@ -1,4 +1,5 @@
 import json
+import re
 import openai
 import streamlit as st
 from pydantic import BaseModel, Field
@@ -21,71 +22,106 @@ class TechnologyNewsAnalysis(BaseModel):
     published_date: str = Field(..., description="Published date of the news article in YYYY-MM-DD format")
 
 
+def extract_json_from_text(text):
+    """Extract JSON object from text response"""
+    # Try to find JSON object in the text
+    json_pattern = r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}'
+    matches = re.findall(json_pattern, text, re.DOTALL)
+    
+    for match in matches:
+        try:
+            return json.loads(match)
+        except json.JSONDecodeError:
+            continue
+    
+    return None
+
+
+def parse_structured_text(content, published_date):
+    """Parse structured text format into JSON"""
+    data = {"published_date": published_date}
+    
+    patterns = {
+        'feed_title': r'Feed Title:\s*(.+?)(?:\n|$)',
+        'description': r'Description:\s*(.+?)(?:\n|$)',
+        'core_message': r'Core Message:\s*(.+?)(?=\nKey Tags:|$)',
+        'key_tags': r'Key Tags:\s*(.+?)(?:\n|$)',
+        'sector': r'Sector:\s*(.+?)(?:\n|$)'
+    }
+    
+    for field, pattern in patterns.items():
+        match = re.search(pattern, content, re.DOTALL | re.IGNORECASE)
+        if match:
+            data[field] = match.group(1).strip()
+    
+    # Set defaults for missing fields
+    data.setdefault('feed_title', 'Technology News Update')
+    data.setdefault('description', 'Latest technology development')
+    data.setdefault('core_message', 'Technology industry update')
+    data.setdefault('key_tags', 'technology, news')
+    data.setdefault('sector', 'Technology')
+    
+    return data
+
+
 def analyze_news_content(link, published_date):
     try:
         prompt = f"""
-            # Technology News Analysis Prompt Template
+            Analyze the following technology news link and return a JSON response with this exact structure:
+            
+            {{
+                "feed_title": "Compelling 80-character headline",
+                "description": "Concise overview of main development", 
+                "core_message": "Comprehensive summary covering all major points, context, implications from the entire article. Remove citation brackets like [1], [2], [3] from text.",
+                "key_tags": "keyword1, keyword2, keyword3, keyword4, keyword5",
+                "sector": "Selected primary technology sector",
+                "published_date": "{published_date}"
+            }}
 
-            ## System Instructions
-            You are a specialized AI assistant designed to analyze technology news articles with precision and depth. Your role is to transform raw news content into structured, actionable insights that provide comprehensive understanding of technological developments, market movements, and industry trends.
-
-            ## Required Output Format
-            Feed Title: [Your compelling 80-character headline]
-            Description: [Concise overview of main development]
-            Core Message: [Comprehensive summary covering all major points, context, implications from the entire article and Remove citation brackets like [1], [2], [3] from text.]
-            Key Tags: [keyword1, keyword2, keyword3, keyword4, keyword5]
-            Sector: [Selected primary technology sector]
-            Published Date: {published_date}
-
-            ## Article to Analyze:
-            {link}
+            Article to analyze: {link}
+            
+            Return only valid JSON without any markdown formatting or additional text.
         """
 
         raw_response = client.chat.completions.create(
             model=PERPLEXITY_MODEL,
             messages=[
-                { "role": "system","content": "You are a professional AI assistant for structured technology news analysis." },
+                {"role": "system", "content": "You are a professional AI assistant for structured technology news analysis. Always return valid JSON."},
                 {"role": "user", "content": prompt},
             ],
             temperature=0.4,
-            response_format={
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "technology_news_analysis",
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "feed_title": {"type": "string"},
-                            "description": {"type": "string"},
-                            "core_message": {"type": "string"},
-                            "key_tags": {"type": "string"},
-                            "sector": {"type": "string"},
-                            "published_date": {"type": "string"}
-                        },
-                        "required": ["feed_title", "description", "core_message", "key_tags", "sector", "published_date"],
-                        "additionalProperties": False
-                    },
-                    "strict": True
-                }
-            }
         )
 
         content = raw_response.choices[0].message.content
         if not content:
-            print(raw_response)
             st.error("❌ No content received from the analysis model.")
             return None
 
-        print(f"Raw API response content: {content}")
+        print(f"Raw API response: {content[:200]}...")
         
+        # Try multiple parsing strategies
+        response_data = None
+        
+        # Strategy 1: Direct JSON parsing
         try:
-            response = json.loads(content)
-        except json.JSONDecodeError as json_error:
-            st.error(f"❌ Failed to parse JSON response: {json_error}")
+            response_data = json.loads(content)
+        except json.JSONDecodeError:
+            pass
+        
+        # Strategy 2: Extract JSON from text
+        if not response_data:
+            response_data = extract_json_from_text(content)
+        
+        # Strategy 3: Parse structured text format
+        if not response_data:
+            response_data = parse_structured_text(content, published_date)
+        
+        if not response_data:
+            st.error("❌ Failed to parse response in any format")
             st.error(f"Raw content: {content}")
             return None
             
-        return TechnologyNewsAnalysis(**response)
+        return TechnologyNewsAnalysis(**response_data)
 
     except Exception as e:
         st.error(f"❌ Failed to analyze news content: {e}")
