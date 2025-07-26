@@ -187,7 +187,7 @@ if st.session_state.all_entries:
     if st.session_state.selected_indices:
         st.info(f"Selected {len(st.session_state.selected_indices)} entries out of {total_entries} total entries")
 
-# --- Analyze Selected Entries ---
+# --- Analyze Selected Entries ----
 selected_for_analysis = [
     st.session_state.all_entries[i] for i in st.session_state.selected_indices
 ]
