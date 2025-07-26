@@ -213,7 +213,6 @@ if st.session_state.analyzed_entries:
     
     # Initialize Google Sheets client once
     client = connect_gspread_client()
-    print("===================",client)
     sheet_names = list_spreadsheets(client)
     default_sheet_name = sheet_names[0] if sheet_names else None
     
