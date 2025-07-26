@@ -13,10 +13,11 @@ import time
 # Page configuration
 def run_app():
     st.set_page_config(
-        page_title="URL Analyzer & Content Generator",
+        page_title="URL News Stream",
         page_icon="📰",
         layout="wide"
     )
+    st.title("🤖 URL News Stream")
 
     # Initialize session state
     if 'analyzed_articles' not in st.session_state:
@@ -148,8 +149,7 @@ def run_app():
         # Show only high-level progress
         status_text.text(f"📊 Processing... {current + 1} of {total} articles")
 
-    # Title
-    st.title("News Analysis & Content Generator")
+
 
     # Enhanced URL Input Section
     st.subheader("📰 Enter News URLs for Analysis")
