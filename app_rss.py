@@ -15,8 +15,8 @@ from utils.parser import clean_html_tags
 from content_gen import get_content_generator  
 
 def run_app():
-    st.set_page_config(page_title="Neural News-Arena: News in a Blink", layout="wide")
-    st.title("🤖 Neural News-Arena: News in a Blink")
+    st.set_page_config(page_title="RSS News Explorer", layout="wide")
+    st.title("🤖 RSS News Explorer")
 
     # Initialize content generator
     content_generator = get_content_generator()
